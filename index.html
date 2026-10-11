@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Legend of Zelda: The Minish Cap</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗡️</text></svg>">
+
+  <!-- GBA Hardware Core in JavaScript -->
+  <script src="gba_core/js/util.js"></script>
+  <script src="gba_core/js/core.js"></script>
+  <script src="gba_core/js/arm.js"></script>
+  <script src="gba_core/js/thumb.js"></script>
+  <script src="gba_core/js/mmu.js"></script>
+  <script src="gba_core/js/io.js"></script>
+  <script src="gba_core/js/audio.js"></script>
+  <script src="gba_core/js/video.js"></script>
+  <script src="gba_core/js/video/proxy.js"></script>
+  <script src="gba_core/js/video/software.js"></script>
+  <script src="gba_core/js/irq.js"></script>
+  <script src="gba_core/js/keypad.js"></script>
+  <script src="gba_core/js/sio.js"></script>
+  <script src="gba_core/js/gpio.js"></script>
+  <script src="gba_core/js/savedata.js"></script>
+  <script src="gba_core/js/gba.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Top Minimal Toolbar -->
+    <header class="app-toolbar">
+      <div class="game-meta">
+        <h1 class="game-title">The Legend of Zelda: The Minish Cap</h1>
+        <span class="game-tag">Authentic GBA Engine</span>
+      </div>
+      <div class="toolbar-actions">
+        <button class="tool-btn" id="btnAudio" title="Toggle Sound">
+          <span id="audioLabel">🔊 Sound</span>
+        </button>
+        <button class="tool-btn" id="btnCrt" title="Toggle CRT Scanline Effect">
+          <span>CRT Filter</span>
+        </button>
+        <button class="tool-btn" id="btnFullscreen" title="Toggle Fullscreen">
+          <span>⛶ Fullscreen</span>
+        </button>
+        <button class="tool-btn" id="btnHelp" title="Keyboard Controls & Info">
+          <span>🎮 Controls</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Game Viewport -->
+    <main class="game-viewport" id="gameViewport">
+      <!-- Loading Overlay -->
+      <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text" id="loadingText">Loading The Legend of Zelda: The Minish Cap...</div>
+        <div class="loading-progress" id="loadingProgress">Initializing GBA Hardware Core...</div>
+      </div>
+
+      <!-- Native 240x160 Game Canvas -->
+      <canvas id="gameCanvas" width="240" height="160"></canvas>
+
+      <!-- Optional CRT Scanlines Layer -->
+      <div class="scanlines-layer hidden" id="scanlinesLayer"></div>
+    </main>
+
+    <!-- Bottom Controls Quick Bar -->
+    <footer class="app-footer">
+      <div class="quick-controls-hint">
+        <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / <kbd>Arrows</kbd> Move</span>
+        <span><kbd>J</kbd> / <kbd>Z</kbd> Sword [A]</span>
+        <span><kbd>K</kbd> / <kbd>X</kbd> Roll [B]</span>
+        <span><kbd>E</kbd> / <kbd>R</kbd> Action [R]</span>
+        <span><kbd>Q</kbd> Kinstone [L]</span>
+        <span><kbd>Enter</kbd> / <kbd>P</kbd> Start</span>
+        <span><kbd>Shift</kbd> / <kbd>T</kbd> Select</span>
+      </div>
+    </footer>
+
+    <!-- Controls / Info Modal -->
+    <div class="modal-overlay" id="controlsModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h2>Controls &amp; Game Info</h2>
+          <button class="modal-close-btn" id="closeModalBtn">✕</button>
+        </div>
+        <div class="modal-body">
+          <table class="controls-table">
+            <thead>
+              <tr>
+                <th>GBA Button</th>
+                <th>Primary Key</th>
+                <th>Alternative Key</th>
+                <th>Function</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>D-Pad</strong></td>
+                <td><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></td>
+                <td><kbd>▲</kbd> <kbd>◀</kbd> <kbd>▼</kbd> <kbd>▶</kbd></td>
+                <td>Move Link / Menu navigation</td>
+              </tr>
+              <tr>
+                <td><strong>A Button</strong></td>
+                <td><kbd>J</kbd></td>
+                <td><kbd>Z</kbd> / <kbd>Enter</kbd></td>
+                <td>Sword attack, talk, confirm, pick up</td>
+              </tr>
+              <tr>
+                <td><strong>B Button</strong></td>
+                <td><kbd>K</kbd></td>
+                <td><kbd>X</kbd> / <kbd>Space</kbd></td>
+                <td>Roll, cancel, secondary item</td>
+              </tr>
+              <tr>
+                <td><strong>R Button</strong></td>
+                <td><kbd>E</kbd></td>
+                <td><kbd>R</kbd></td>
+                <td>Grab, push, Minish portal transformation</td>
+              </tr>
+              <tr>
+                <td><strong>L Button</strong></td>
+                <td><kbd>Q</kbd></td>
+                <td><kbd>U</kbd></td>
+                <td>Kinstone fusion menu</td>
+              </tr>
+              <tr>
+                <td><strong>START</strong></td>
+                <td><kbd>P</kbd></td>
+                <td><kbd>Escape</kbd></td>
+                <td>Pause, inventory, quest status</td>
+              </tr>
+              <tr>
+                <td><strong>SELECT</strong></td>
+                <td><kbd>T</kbd></td>
+                <td><kbd>Shift</kbd> / <kbd>Tab</kbd></td>
+                <td>Ezlo cap hint dialog</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="info-meta-card">
+            <p><strong>Game:</strong> The Legend of Zelda: The Minish Cap (USA: BZME)</p>
+            <p><strong>Engine:</strong> Direct ROM execution (16.0 MB cartridge bytecode) at 60 FPS</p>
+            <p><strong>Saves:</strong> Game saves (Files 1, 2, 3) are automatically saved to your browser's local storage.</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-primary" id="resumeBtn">Return to Game</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
